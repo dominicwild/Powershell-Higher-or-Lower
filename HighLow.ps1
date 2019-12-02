@@ -66,6 +66,7 @@ class Deck{
 }
 
 function processGuess([string] $guess){
+    [OutputType([int])]
     $guess = switch($guess){
         "higher" { 1 }
         "high" { 1 }
@@ -74,10 +75,38 @@ function processGuess([string] $guess){
         "low" { 0 }
         "l" { 0 }
     }
+    $guess
 }
 
 function borderLine(){
     Write-Host "------------------------------"
+}
+
+$validColours = @("black","darkblue","darkgreen","darkcyan","darkred","darkmagenta","darkyellow","gray","darkgray","blue","green","cyan","red","magenta","yellow","white")
+
+function Write-Color([string] $text) {
+
+    #Syntax of <red> text </red>
+    #$textArray = [regex]::split("Some red <red> text </red> That also has some <yellow> text for us all </yellow>","(<.+?>.+?<\/.+?>)")
+    $textArray = [regex]::split($text,"(<.+?>.+?<\/.+?>)")
+
+    foreach($text in $textArray) {
+        $text = $text.Trim()
+        if($text -And $text[0] -eq "<") {
+            $color = [regex]::Split($text,"<(.+?)>")
+            $text = $color[2]
+            $color = $color[1]
+            
+            if($validColours -contains $color.ToLower() ){
+                Write-Host $text -ForegroundColor $color -NoNewline
+            } else {
+                Write-Host $text -NoNewline
+            }
+        } else {
+            Write-Host $text -NoNewline
+        }
+    }
+    Write-Host
 }
 
 #$name = Read-Host -Prompt "What is your name?"
@@ -92,30 +121,26 @@ borderLine
 
 while($deck.cards.Count -gt 0){   
 
-  Write-Host "The " -NoNewline 
-  $card.display() 
-  Write-Host " has been drawn"
-  Write-Host "There are" $deck.cards.Count "cards remaining"
+  Write-Color("The <yellow> " + $card.toString() + " </yellow> has been drawn")
+  Write-Color("There are <cyan> " + $deck.cards.Count + " </cyan> cards remaining")
   Write-Host "Higher or lower? (h/l)" 
-  $guess = Read-Host
+  $guess = processGuess(Read-Host)
 
   $nextCard = $deck.draw()
-  Write-Host "The next card drawn is " -NoNewline
-  $nextCard.display()
-  Write-Host
+  Write-Color("The next card drawn is <yellow> " + $nextCard.toString() + " </yellow> ")
 
   if($guess -and $card.getValue() -le $nextCard.getValue() ){
 
     $points++
-    Write-Host "Correct, the next card was higher. You now have" $points "points"
+    Write-Color("<green>Correct, the next card was higher.</green><magenta> You now have " + $points + " points </magenta>")
     
-  } elseif ($card.getValue() -gt $nextCard.getValue()) { 
+  } elseif ($guess -and $card.getValue() -gt $nextCard.getValue()) { 
 
     $points++
-    Write-Host "Correct, the next card was lower. You now have" $points "points"
+    Write-Color("<green>Correct, the next card was lower.</green> <magenta> You now have " +  $points + " points<magenta>")
     
   } else {
-    Write-Host "You guessed incorrectly and ended the game with" $points "points"
+    Write-Color("<red>You guessed incorrectly and ended the game with</red><magenta> " + $points + " points</magenta>")
     break
   }
 
