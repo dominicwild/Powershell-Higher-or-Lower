@@ -109,49 +109,77 @@ function Write-Color([string] $text) {
     Write-Host
 }
 
-#$name = Read-Host -Prompt "What is your name?"
-#Write-Host "Your name is" $name
-
-$s = import-csv cards.csv
-$deck = [Deck]::new($s)
-$card = $deck.draw()
-$points = 0
-
-borderLine
-
-while($deck.cards.Count -gt 0){   
-
-  Write-Color("The <yellow> " + $card.toString() + " </yellow> has been drawn")
-  Write-Color("There are <cyan> " + $deck.cards.Count + " </cyan> cards remaining")
-  Write-Host "Higher or lower? (h/l)" 
-  $guess = processGuess(Read-Host)
-
-  $nextCard = $deck.draw()
-  Write-Color("The next card drawn is <yellow> " + $nextCard.toString() + " </yellow> ")
-
-  if($guess -and $card.getValue() -le $nextCard.getValue() ){
-
-    $points++
-    Write-Color("<green>Correct, the next card was higher.</green><magenta> You now have " + $points + " points </magenta>")
-    
-  } elseif ($guess -and $card.getValue() -gt $nextCard.getValue()) { 
-
-    $points++
-    Write-Color("<green>Correct, the next card was lower.</green> <magenta> You now have " +  $points + " points<magenta>")
-    
-  } else {
-    Write-Color("<red>You guessed incorrectly and ended the game with</red><magenta> " + $points + " points</magenta>")
-    break
-  }
-
-  if($deck.cards.Count -eq 0){
-    Write-Host "Deck is empty, deck is being reshuffled."
+function highLowGame(){
+    $s = import-csv cards.csv
     $deck = [Deck]::new($s)
-    $deck.cards.Remove($nextCard)
-  }
+    $card = $deck.draw()
+    $points = 0
 
-  $card = $nextCard
+    borderLine
 
-  borderLine
+    while($deck.cards.Count -gt 0){   
+
+      Write-Color("The <yellow> " + $card.toString() + " </yellow> has been drawn")
+      Write-Color("There are <cyan> " + $deck.cards.Count + " </cyan> cards remaining")
+      Write-Host "Higher or lower? (h/l)" 
+      $guess = processGuess(Read-Host)
+
+      $nextCard = $deck.draw()
+      Write-Color("The next card drawn is <yellow> " + $nextCard.toString() + " </yellow> ")
+
+      Write-Host $guess
+
+      if($guess -and $card.getValue() -le $nextCard.getValue() ){
+
+        $points++
+        Write-Color("<green>Correct, the next card was higher.</green><magenta> You now have " + $points + " points </magenta>")
+    
+      } elseif (!$guess -and $card.getValue() -gt $nextCard.getValue()) { 
+
+        $points++
+        Write-Color("<green>Correct, the next card was lower.</green> <magenta> You now have " +  $points + " points<magenta>")
+    
+      } else {
+        Write-Color("<red>You guessed incorrectly and ended the game with</red><magenta> " + $points + " points</magenta>")
+        break
+      }
+
+      if($deck.cards.Count -eq 0){
+        Write-Host "Deck is empty, deck is being reshuffled."
+        $deck = [Deck]::new($s)
+        $deck.cards.Remove($nextCard)
+      }
+
+      $card = $nextCard
+
+      borderLine
+
+    }
+
+    if(@("y","yes") -contains (Read-Host -Prompt "Play again?")){
+        highLowGame
+    } else {
+        mainMenu
+    }
+    
+}
+
+function mainMenu(){
+    
+    Write-Host "==============================="
+    Write-Host "= 1. High-Low Game            ="
+    Write-Host "==============================="
+
+    switch(Read-Host){
+
+        1 {highLowGame}
+
+    }
 
 }
+
+$name = Read-Host -Prompt "What is your name?"
+Write-Host "Your name is" $name
+
+mainMenu
+highLowGame
